@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="liu">
+
+
+
+
+
+<title>mac+vm配置hadoop2.x运行环境 | 刘先生&#39;s blogs</title>
+
+
+
+    <link rel="icon" href="/code.png">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        <!-- MathJax配置，可通过单美元符号书写行内公式等 -->
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+    "HTML-CSS": {
+        preferredFont: "TeX",
+        availableFonts: ["STIX","TeX"],
+        linebreaks: { automatic:true },
+        EqnChunk: (MathJax.Hub.Browser.isMobile ? 10 : 50)
+    },
+    tex2jax: {
+        inlineMath: [ ["$", "$"], ["\\(","\\)"] ],
+        processEscapes: true,
+        ignoreClass: "tex2jax_ignore|dno",
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+        equationNumbers: { autoNumber: "AMS" },
+        noUndefined: { attributes: { mathcolor: "red", mathbackground: "#FFEEEE", mathsize: "90%" } },
+        Macros: { href: "{}" }
+    },
+    messageStyle: "none"
+    });
+</script>
+<!-- 给MathJax元素添加has-jax class -->
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+<!-- 通过连接CDN加载MathJax的js代码 -->
+<script type="text/javascript" async
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
+
+
+    
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+<body>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">刘先生&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">刘先生&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+        <div class="main">
+            <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">mac+vm配置hadoop2.x运行环境</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">liu</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">March 8, 2020&nbsp;&nbsp;20:49:29</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/hadoop/">hadoop</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h3 id="首先完成以下软件下载配置"><a href="#首先完成以下软件下载配置" class="headerlink" title="首先完成以下软件下载配置"></a>首先完成以下软件下载配置</h3><ul>
+<li>下载VM软件，在mac毒网站上可搜索的到，会员可下载</li>
+<li>下载centos7镜像，标准版，==<a href="http://mirrors.aliyun.com/centos/7/isos/x86_64/==" target="_blank" rel="noopener">http://mirrors.aliyun.com/centos/7/isos/x86_64/==</a> 这个网站是阿里资源，下载CentOS-7-x86_64-DVD-1908.iso 标准版即可</li>
+<li>打开VM软件，选择下载的镜像，进行安装，注意安装系统时，网络开启，选择最小软件安装即可</li>
+<li>安装完成后配置网络，这一步比较关键，虚拟机选择桥接方式，自动检测即可。若ifconfig命令无法使用，可以==yum install net-tools== 安装后，查看ifconfig，可以看到无ip地址。  </li>
+</ul>
+<h3 id="配置网络"><a href="#配置网络" class="headerlink" title="配置网络"></a>配置网络</h3><ul>
+<li>在mac本机的系统偏好设置-&gt;网络-&gt;高级-&gt;WIFI-&gt;TCP/IP里查看ipv4地址，和路由器地址，</li>
+<li>假设这里路由器ip是192.168.0.1,那么在虚机的IP配置中，GATEWAY就填192.168.0.1，IPADDR填192.168.0.x，x不超过254，其他和上面一致<br>在VM虚机上网络设置那里选择桥接-&gt;wifi，如图,<br>其中IP则为本机的IP,因此我这里设置的master为192。168.0.10，slave1: 0.11 ,slave2: 0.12<br><img src="/2020/03/08/hadoop-1/ip.png" alt="网络"></li>
+<li>完成后重启网络service network restart ,然后重启虚拟机后，测试本机是否可以连接虚机</li>
+</ul>
+<h3 id="配置可主机SSH连接虚机"><a href="#配置可主机SSH连接虚机" class="headerlink" title="配置可主机SSH连接虚机"></a>配置可主机SSH连接虚机</h3><ul>
+<li><p>关闭防火墙，s==ystemctl stop firewalld.service== ,然后执行 ==systemctl disable firewalld.service== </p>
+</li>
+<li><p>开启ssh 连接，即22端口</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">在终端中输入  yum list installed | grep openssh-server 如果没有显示即可通过yum install openssh-server来进行安装</span><br></pre></td></tr></table></figure></li>
+<li><p>==vim  /etc/ssh/sshd_config==,<br>将以下内容的注释去掉(port,ListenAddress)，并开启远程登陆</p>
+</li>
+<li><p>修改完成后，开启  sshd  服务，输入 ==sudo service sshd start==,检查  sshd  服务是否已经开启，输入==ps -e | grep sshd==</p>
+</li>
+<li><p>完成以上配置后，通过VM重启该虚机，然后克隆出slave1和slave2，然后进入slave1和slave2分别修改IPADDR为 172.16.48.151 和172.16.48.152（三个ip不一样，且在range中间即可）,重启网络服务，service network restart 。完成后重启slave1和slave2，然后分别在三台虚机之间互相ping ip  ，查看是否可以ping 通和ssh 连接， ssh root@ip</p>
+</li>
+</ul>
+<h3 id="互信配置"><a href="#互信配置" class="headerlink" title="互信配置"></a>互信配置</h3><ul>
+<li>完成三台虚机的基本配置后，配置互信，否则每次主从传输文件，访问都需要密码</li>
+<li>配置hosts ，分别vim /etc/hosts，添加以下内容，即可通过别名访问<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">192.168.0.10 master</span><br><span class="line">192.168.0.11 slave1</span><br><span class="line">192.168.0.12 slave2</span><br></pre></td></tr></table></figure></li>
+<li>配置互信 ,在三台虚机上分别执行以下操作<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1. ssh-keygen -t rsa (三次回车即可)</span><br><span class="line">2. cat &#x2F;root&#x2F;.ssh&#x2F;id_rsa.pub &gt; &#x2F;root&#x2F;.ssh&#x2F;authorized_keys</span><br><span class="line">3. chmod 600 &#x2F;root&#x2F;.ssh&#x2F;authorized_keys</span><br></pre></td></tr></table></figure></li>
+<li>三台虚机完成上述配置后，以下操作在master虚机上<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ssh slave1 cat &#x2F;root&#x2F;.ssh&#x2F;authorized_keys &gt;&gt; &#x2F;root&#x2F;.ssh&#x2F;authorized_keys</span><br><span class="line">ssh slave2 cat &#x2F;root&#x2F;.ssh&#x2F;authorized_keys &gt;&gt; &#x2F;root&#x2F;.ssh&#x2F;authorized_keys</span><br></pre></td></tr></table></figure></li>
+<li>然后在两个从节点虚机上<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh master cat &#x2F;root&#x2F;.ssh&#x2F;authorized_keys &gt; &#x2F;root&#x2F;.ssh&#x2F;authorized_keys</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<h3 id="安装jdk"><a href="#安装jdk" class="headerlink" title="安装jdk"></a>安装jdk</h3><ul>
+<li>安装jdk8及以上，自行网上下载jdk for linux版本 <a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html。" target="_blank" rel="noopener">http://www.oracle.com/technetwork/java/javase/downloads/index.html。</a></li>
+<li>资源较慢提供百度网盘，包含jdk+hadoop2.10资源，链接:<a href="https://pan.baidu.com/s/1ELob6VpYofFY7piC4iFUdA" target="_blank" rel="noopener">https://pan.baidu.com/s/1ELob6VpYofFY7piC4iFUdA</a>  密码:dxhl </li>
+<li>下载jdk后，解压jdk到/usr/local/src/jdk目录下(目录自定义即可,后面注意配置jdk时路径)</li>
+<li>配置环境变量 ==vim ~/.bashrc==<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">JAVA_HOME&#x3D;&#x2F;usr&#x2F;local&#x2F;src&#x2F;jdk1.8.0_152</span><br><span class="line">JAVA_BIN&#x3D;&#x2F;usr&#x2F;local&#x2F;src&#x2F;jdk1.8.0_152&#x2F;bin</span><br><span class="line">JRE_HOME&#x3D;&#x2F;usr&#x2F;local&#x2F;src&#x2F;jdk1.8.0_152&#x2F;jre</span><br><span class="line">CLASSPATH&#x3D;&#x2F;usr&#x2F;local&#x2F;jdk1.8.0_152&#x2F;jre&#x2F;lib:&#x2F;usr&#x2F;local&#x2F;jdk1.8.0_152&#x2F;lib:&#x2F;usr&#x2F;local&#x2F;jdk1.8.0_152&#x2F;jre&#x2F;lib&#x2F;charsets.jar</span><br><span class="line"></span><br><span class="line">PATH&#x3D;$PATH:$JAVA_HOME&#x2F;bin:$JRE_HOME&#x2F;bin</span><br></pre></td></tr></table></figure></li>
+<li>拷贝到其他连个从节点主机<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">scp -r &#x2F;usr&#x2F;local&#x2F;src&#x2F;jdk1.8.0_152 root@slave1:&#x2F;usr&#x2F;local&#x2F;src&#x2F;jdk1.8.0_152</span><br><span class="line"></span><br><span class="line">scp -r &#x2F;usr&#x2F;local&#x2F;src&#x2F;jdk1.8.0_152 root@slave2:&#x2F;usr&#x2F;local&#x2F;src&#x2F;jdk1.8.0_152</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<h3 id="配置hadoop"><a href="#配置hadoop" class="headerlink" title="配置hadoop"></a>配置hadoop</h3><ul>
+<li><p>首先在master上配置好后，复制到从节点即可，不用每台都配置</p>
+</li>
+<li><p>解压hadoop包到 /usr/local/src/hadoop/ 目录下,进入目录hadoop的etc/目录下，修改配置文件</p>
+</li>
+<li><p>配置env.sh</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">cd &#x2F;etc&#x2F;hadoop</span><br><span class="line">vim hadoop-env.sh </span><br><span class="line">export JAVA_HOME&#x3D;&#x2F;usr&#x2F;local&#x2F;src&#x2F;jdk&#x2F;jdk1.8.0_152</span><br></pre></td></tr></table></figure></li>
+<li><p>配置yarn-env.sh</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">export JAVA_HOME&#x3D;&#x2F;usr&#x2F;local&#x2F;src&#x2F;jdk&#x2F;jdk1.8.0_152</span><br></pre></td></tr></table></figure></li>
+<li><p>配置slaves</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">slave1</span><br><span class="line">slave2</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>配置core-site.xml</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&lt;configuration&gt;</span><br><span class="line">    &lt;property&gt;</span><br><span class="line">        &lt;name&gt;fs.defaultFS&lt;&#x2F;name&gt;</span><br><span class="line">        &lt;value&gt;hdfs:&#x2F;&#x2F;192.168.0.11:9000&lt;&#x2F;value&gt; &#x2F;&#x2F;配置masterip</span><br><span class="line">    &lt;&#x2F;property&gt;</span><br><span class="line">    &lt;property&gt;</span><br><span class="line">        &lt;name&gt;hadoop.tmp.dir&lt;&#x2F;name&gt;</span><br><span class="line">        &lt;value&gt;file:&#x2F;usr&#x2F;local&#x2F;src&#x2F;hadoop&#x2F;hadoop-2.10.0&#x2F;tmp&lt;&#x2F;value&gt;</span><br><span class="line">    &lt;&#x2F;property&gt;</span><br><span class="line">&lt;&#x2F;configuration&gt;</span><br></pre></td></tr></table></figure></li>
+<li><p>配置hdfs-site.xml</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">&lt;configuration&gt;</span><br><span class="line">    &lt;property&gt;</span><br><span class="line">       &lt;name&gt;dfs.namenode.secondary.http-address&lt;&#x2F;name&gt;</span><br><span class="line">        &lt;value&gt;master:9001&lt;&#x2F;value&gt;</span><br><span class="line">    &lt;&#x2F;property&gt;</span><br><span class="line">    &lt;property&gt;</span><br><span class="line">        &lt;name&gt;dfs.namenode.name.dir&lt;&#x2F;name&gt;</span><br><span class="line">        &lt;value&gt;file:&#x2F;usr&#x2F;local&#x2F;src&#x2F;hadoop&#x2F;hadoop-2.10.0&#x2F;dfs&#x2F;name&lt;&#x2F;value&gt;</span><br><span class="line">    &lt;&#x2F;property&gt;</span><br><span class="line">    &lt;property&gt;</span><br><span class="line">        &lt;name&gt;dfs.datanode.data.dir&lt;&#x2F;name&gt;</span><br><span class="line">        &lt;value&gt;file:&#x2F;usr&#x2F;local&#x2F;src&#x2F;hadoop&#x2F;hadoop-2.10.0&#x2F;dfs&#x2F;data&lt;&#x2F;value&gt;</span><br><span class="line">    &lt;&#x2F;property&gt;</span><br><span class="line">    &lt;property&gt;</span><br><span class="line">        &lt;name&gt;dfs.repliction&lt;&#x2F;name&gt;</span><br><span class="line">        &lt;value&gt;3&lt;&#x2F;value&gt;</span><br><span class="line">    &lt;&#x2F;property&gt;</span><br><span class="line">&lt;&#x2F;configuration&gt;</span><br></pre></td></tr></table></figure></li>
+<li><p>配置 mapred-site.xml</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;configuration&gt;</span><br><span class="line">    &lt;property&gt;</span><br><span class="line">        &lt;name&gt;mapreduce.framework.name&lt;&#x2F;name&gt;</span><br><span class="line">        &lt;value&gt;yarn&lt;&#x2F;value&gt;</span><br><span class="line">    &lt;&#x2F;property&gt;</span><br><span class="line">&lt;&#x2F;configuration&gt;</span><br></pre></td></tr></table></figure></li>
+<li><p>配置yarn-site.xml</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">&lt;configuration&gt;</span><br><span class="line">    &lt;property&gt;</span><br><span class="line">        &lt;name&gt;yarn.nodemanager.aux-services&lt;&#x2F;name&gt;</span><br><span class="line">        &lt;value&gt;mapreduce_shuffle&lt;&#x2F;value&gt;</span><br><span class="line">    &lt;&#x2F;property&gt;</span><br><span class="line">    &lt;property&gt;</span><br><span class="line">        &lt;name&gt;yarn.nodemanager.aux-services.mapreduce.shuffle.class&lt;&#x2F;name&gt;</span><br><span class="line">        &lt;value&gt;org.apache.hadoop.mapred.ShuffleHandler&lt;&#x2F;value&gt;</span><br><span class="line">    &lt;&#x2F;property&gt;</span><br><span class="line">    &lt;property&gt;</span><br><span class="line">        &lt;name&gt;yarn.resourcemanager.address&lt;&#x2F;name&gt;</span><br><span class="line">        &lt;value&gt;master:8032&lt;&#x2F;value&gt;</span><br><span class="line">    &lt;&#x2F;property&gt;</span><br><span class="line">    &lt;property&gt;</span><br><span class="line">        &lt;name&gt;yarn.resourcemanager.scheduler.address&lt;&#x2F;name&gt;</span><br><span class="line">        &lt;value&gt;master:8030&lt;&#x2F;value&gt;</span><br><span class="line">    &lt;&#x2F;property&gt;</span><br><span class="line">    &lt;property&gt;</span><br><span class="line">        &lt;name&gt;yarn.resourcemanager.resource-tracker.address&lt;&#x2F;name&gt;</span><br><span class="line">        &lt;value&gt;master:8035&lt;&#x2F;value&gt;</span><br><span class="line">    &lt;&#x2F;property&gt;</span><br><span class="line">    &lt;property&gt;</span><br><span class="line">        &lt;name&gt;yarn.resourcemanager.admin.address&lt;&#x2F;name&gt;</span><br><span class="line">        &lt;value&gt;master:8033&lt;&#x2F;value&gt;</span><br><span class="line">    &lt;&#x2F;property&gt;</span><br><span class="line">    &lt;property&gt;</span><br><span class="line">        &lt;name&gt;yarn.resourcemanager.webapp.address&lt;&#x2F;name&gt;</span><br><span class="line">        &lt;value&gt;master:8088&lt;&#x2F;value&gt;</span><br><span class="line">    &lt;&#x2F;property&gt;</span><br><span class="line">&lt;&#x2F;configuration&gt;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>创建临时目录和文件目录</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mkdir &#x2F;usr&#x2F;local&#x2F;src&#x2F;hadoop&#x2F;hadoop-2.10.0&#x2F;tmp</span><br><span class="line">mkdir -p &#x2F;usr&#x2F;local&#x2F;src&#x2F;hadoop&#x2F;hadoop-2.10.0&#x2F;dfs&#x2F;name</span><br><span class="line">mkdir -p &#x2F;usr&#x2F;local&#x2F;src&#x2F;hadoop&#x2F;hadoop-2.10.0&#x2F;dfs&#x2F;data</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>复制到从节点</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">scp -r &#x2F;usr&#x2F;local&#x2F;src&#x2F;src&#x2F;hadoop-2.10.0 root@slave1:&#x2F;usr&#x2F;local&#x2F;src&#x2F;hadoop-2.10.0</span><br><span class="line">scp -r &#x2F;usr&#x2F;local&#x2F;src&#x2F;hadoop&#x2F;hadoop-2.10.0 root@slave2:&#x2F;usr&#x2F;local&#x2F;src&#x2F;hadoop&#x2F;hadoop-2.10.0</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>配置环境变量(master,slave1,slave2)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">vim ~&#x2F;.bashrc</span><br><span class="line"></span><br><span class="line">HADOOP_HOME&#x3D;&#x2F;usr&#x2F;local&#x2F;src&#x2F;src&#x2F;hadoop-2.10.0</span><br><span class="line">export PATH&#x3D;$PATH:$HADOOP_HOME&#x2F;bin</span><br><span class="line"></span><br><span class="line">保存退出后  source ~&#x2F;.bashrc 生效</span><br></pre></td></tr></table></figure>
+<h3 id="启动集群"><a href="#启动集群" class="headerlink" title="启动集群"></a>启动集群</h3></li>
+<li><p>在master上初始化Namenode,进入hadoop的bin 目录下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hadoop namenode -format</span><br></pre></td></tr></table></figure></li>
+<li><p>启动集群</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.&#x2F;sbin&#x2F;start-all.sh</span><br></pre></td></tr></table></figure></li>
+<li><p>jps 查看集群状态         </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">master上应显示有Jps,ResourceManager,SecondaryNameNode,NameNode 四个</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">slave 上应有 Jps,NodeManager,DataNode 三个</span><br></pre></td></tr></table></figure></li>
+<li><p>网页查看</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http:&#x2F;&#x2F;(masterIp):8088</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>关闭集群 ==./sbin/hadoop stop-all.sh==</p>
+</li>
+</ul>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>链接:</span>
+                        <span><a href="https://mrljun.github.io/2020/03/08/hadoop-1/">https://mrljun.github.io/2020/03/08/hadoop-1/</a></span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>目标:</span>
+                         <span><strong>坚持学习</strong></span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/hadoop/"># hadoop</a>
+                    
+                        <a href="/tags/%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/"># 环境配置</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+            
+        </section>
+
+
+    </article>
+</div>
+
+        </div>
+        <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© liu | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+</html>
