@@ -233,9 +233,9 @@
         <div class="post-content">
             <h3 id="首先完成以下软件下载配置"><a href="#首先完成以下软件下载配置" class="headerlink" title="首先完成以下软件下载配置"></a>首先完成以下软件下载配置</h3><ul>
 <li>下载VM软件，在mac毒网站上可搜索的到，会员可下载</li>
-<li>下载centos7镜像，标准版，==<a href="http://mirrors.aliyun.com/centos/7/isos/x86_64/==" target="_blank" rel="noopener">http://mirrors.aliyun.com/centos/7/isos/x86_64/==</a> 这个网站是阿里资源，下载CentOS-7-x86_64-DVD-1908.iso 标准版即可</li>
+<li>下载centos7镜像，标准版，<a href="http://mirrors.aliyun.com/centos/7/isos/x86_64/" target="_blank" rel="noopener">http://mirrors.aliyun.com/centos/7/isos/x86_64/</a> 这个网站是阿里资源，下载CentOS-7-x86_64-DVD-1908.iso 标准版即可</li>
 <li>打开VM软件，选择下载的镜像，进行安装，注意安装系统时，网络开启，选择最小软件安装即可</li>
-<li>安装完成后配置网络，这一步比较关键，虚拟机选择桥接方式，自动检测即可。若ifconfig命令无法使用，可以==yum install net-tools== 安装后，查看ifconfig，可以看到无ip地址。  </li>
+<li>安装完成后配置网络，这一步比较关键，虚拟机选择桥接方式，自动检测即可。若ifconfig命令无法使用，可以yum install net-tools 安装后，查看ifconfig，可以看到无ip地址。  </li>
 </ul>
 <h3 id="配置网络"><a href="#配置网络" class="headerlink" title="配置网络"></a>配置网络</h3><ul>
 <li>在mac本机的系统偏好设置-&gt;网络-&gt;高级-&gt;WIFI-&gt;TCP/IP里查看ipv4地址，和路由器地址，</li>
@@ -243,13 +243,13 @@
 <li>完成后重启网络service network restart ,然后重启虚拟机后，测试本机是否可以连接虚机</li>
 </ul>
 <h3 id="配置可主机SSH连接虚机"><a href="#配置可主机SSH连接虚机" class="headerlink" title="配置可主机SSH连接虚机"></a>配置可主机SSH连接虚机</h3><ul>
-<li><p>关闭防火墙，s==ystemctl stop firewalld.service== ,然后执行 ==systemctl disable firewalld.service== </p>
+<li><p>关闭防火墙，systemctl stop firewalld.service ,然后执行 systemctl disable firewalld.service </p>
 </li>
 <li><p>开启ssh 连接，即22端口</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">在终端中输入  yum list installed | grep openssh-server 如果没有显示即可通过yum install openssh-server来进行安装</span><br></pre></td></tr></table></figure></li>
-<li><p>==vim  /etc/ssh/sshd_config==,<br>将以下内容的注释去掉(port,ListenAddress)，并开启远程登陆</p>
+<li><p>vim  /etc/ssh/sshd_config,<br>将以下内容的注释去掉(port,ListenAddress)，并开启远程登陆</p>
 </li>
-<li><p>修改完成后，开启  sshd  服务，输入 ==sudo service sshd start==,检查  sshd  服务是否已经开启，输入==ps -e | grep sshd==</p>
+<li><p>修改完成后，开启  sshd  服务，输入 sudo service sshd start,检查  sshd  服务是否已经开启，输入ps -e | grep sshd</p>
 </li>
 <li><p>完成以上配置后，通过VM重启该虚机，然后克隆出slave1和slave2，然后进入slave1和slave2分别修改IPADDR为 172.16.48.151 和172.16.48.152（三个ip不一样，且在range中间即可）,重启网络服务，service network restart 。完成后重启slave1和slave2，然后分别在三台虚机之间互相ping ip  ，查看是否可以ping 通和ssh 连接， ssh root@ip</p>
 </li>
@@ -267,7 +267,7 @@
 <li>安装jdk8及以上，自行网上下载jdk for linux版本 <a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html。" target="_blank" rel="noopener">http://www.oracle.com/technetwork/java/javase/downloads/index.html。</a></li>
 <li>资源较慢提供百度网盘，包含jdk+hadoop2.10资源，链接:<a href="https://pan.baidu.com/s/1ELob6VpYofFY7piC4iFUdA" target="_blank" rel="noopener">https://pan.baidu.com/s/1ELob6VpYofFY7piC4iFUdA</a>  密码:dxhl </li>
 <li>下载jdk后，解压jdk到/usr/local/src/jdk目录下(目录自定义即可,后面注意配置jdk时路径)</li>
-<li>配置环境变量 ==vim ~/.bashrc==<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">JAVA_HOME&#x3D;&#x2F;usr&#x2F;local&#x2F;src&#x2F;jdk1.8.0_152</span><br><span class="line">JAVA_BIN&#x3D;&#x2F;usr&#x2F;local&#x2F;src&#x2F;jdk1.8.0_152&#x2F;bin</span><br><span class="line">JRE_HOME&#x3D;&#x2F;usr&#x2F;local&#x2F;src&#x2F;jdk1.8.0_152&#x2F;jre</span><br><span class="line">CLASSPATH&#x3D;&#x2F;usr&#x2F;local&#x2F;jdk1.8.0_152&#x2F;jre&#x2F;lib:&#x2F;usr&#x2F;local&#x2F;jdk1.8.0_152&#x2F;lib:&#x2F;usr&#x2F;local&#x2F;jdk1.8.0_152&#x2F;jre&#x2F;lib&#x2F;charsets.jar</span><br><span class="line"></span><br><span class="line">PATH&#x3D;$PATH:$JAVA_HOME&#x2F;bin:$JRE_HOME&#x2F;bin</span><br></pre></td></tr></table></figure></li>
+<li>配置环境变量 vim ~/.bashrc<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">JAVA_HOME&#x3D;&#x2F;usr&#x2F;local&#x2F;src&#x2F;jdk1.8.0_152</span><br><span class="line">JAVA_BIN&#x3D;&#x2F;usr&#x2F;local&#x2F;src&#x2F;jdk1.8.0_152&#x2F;bin</span><br><span class="line">JRE_HOME&#x3D;&#x2F;usr&#x2F;local&#x2F;src&#x2F;jdk1.8.0_152&#x2F;jre</span><br><span class="line">CLASSPATH&#x3D;&#x2F;usr&#x2F;local&#x2F;jdk1.8.0_152&#x2F;jre&#x2F;lib:&#x2F;usr&#x2F;local&#x2F;jdk1.8.0_152&#x2F;lib:&#x2F;usr&#x2F;local&#x2F;jdk1.8.0_152&#x2F;jre&#x2F;lib&#x2F;charsets.jar</span><br><span class="line"></span><br><span class="line">PATH&#x3D;$PATH:$JAVA_HOME&#x2F;bin:$JRE_HOME&#x2F;bin</span><br></pre></td></tr></table></figure></li>
 <li>拷贝到其他连个从节点主机<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">scp -r &#x2F;usr&#x2F;local&#x2F;src&#x2F;jdk1.8.0_152 root@slave1:&#x2F;usr&#x2F;local&#x2F;src&#x2F;jdk1.8.0_152</span><br><span class="line"></span><br><span class="line">scp -r &#x2F;usr&#x2F;local&#x2F;src&#x2F;jdk1.8.0_152 root@slave2:&#x2F;usr&#x2F;local&#x2F;src&#x2F;jdk1.8.0_152</span><br></pre></td></tr></table></figure>
 
 </li>
@@ -311,7 +311,7 @@
 <li><p>网页查看</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http:&#x2F;&#x2F;(masterIp):8088</span><br></pre></td></tr></table></figure>
 </li>
-<li><p>关闭集群 ==./sbin/hadoop stop-all.sh==</p>
+<li><p>关闭集群 ./sbin/hadoop stop-all.sh</p>
 </li>
 </ul>
 
