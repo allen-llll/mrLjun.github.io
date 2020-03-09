@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="liu">
+
+
+
+
+
+<title>MapReduce(1) | 刘先生&#39;s blogs</title>
+
+
+
+    <link rel="icon" href="/code.png">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        <!-- MathJax配置，可通过单美元符号书写行内公式等 -->
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+    "HTML-CSS": {
+        preferredFont: "TeX",
+        availableFonts: ["STIX","TeX"],
+        linebreaks: { automatic:true },
+        EqnChunk: (MathJax.Hub.Browser.isMobile ? 10 : 50)
+    },
+    tex2jax: {
+        inlineMath: [ ["$", "$"], ["\\(","\\)"] ],
+        processEscapes: true,
+        ignoreClass: "tex2jax_ignore|dno",
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+        equationNumbers: { autoNumber: "AMS" },
+        noUndefined: { attributes: { mathcolor: "red", mathbackground: "#FFEEEE", mathsize: "90%" } },
+        Macros: { href: "{}" }
+    },
+    messageStyle: "none"
+    });
+</script>
+<!-- 给MathJax元素添加has-jax class -->
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+<!-- 通过连接CDN加载MathJax的js代码 -->
+<script type="text/javascript" async
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
+
+
+    
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+<body>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">刘先生&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于我</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">刘先生&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">文章</a>
+                
+                    <a class="menu-item" href="/category">分类</a>
+                
+                    <a class="menu-item" href="/tag">标签</a>
+                
+                    <a class="menu-item" href="/about">关于我</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+        <div class="main">
+            <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">MapReduce(1)</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">liu</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">March 9, 2020&nbsp;&nbsp;22:17:59</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/hadoop/">hadoop</a>
+                            
+                                <a href="/categories/hadoop/MapReduce/">MapReduce</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h3 id="什么是MapReduce"><a href="#什么是MapReduce" class="headerlink" title="什么是MapReduce"></a>什么是MapReduce</h3><ul>
+<li>MapReduce是一个用于处理海量数据的分布式计算框架，这个框架解决了</li>
+</ul>
+<ol>
+<li>数据分布式存储(数据存在HDFS上)</li>
+<li>作业调度</li>
+<li>机器间通信</li>
+<li>容错</li>
+</ol>
+<ul>
+<li><p>MapReduce使用分治方式(分解，求解，合并)，通过Map切分，Reduce合并进行数据处理,如图<br><img src="/2020/03/09/mapreduce-1/mapreduce1.png" alt="流程"></p>
+</li>
+<li><p>理解上面这幅图非常重要，普遍情况下，大部分开发人员进行MapReduce开发任务时，只需要关注灰色部分。</p>
+<ol>
+<li>运行MapReduce程序时，首先将需要处理的数据上传至HDFS，通过HDFS交给InputForMat进行切分，通常默认情况下，Hadoop 2.x默认的block大小是128MB，Hadoop 1.x的block大小是64MB，可以在hdfs-site.xml中设置</li>
+<li>将切分成块的数据交由Map程序处理 。Map程序处理完成后生成&lt;k,v&gt;形式数据</li>
+<li>将map处理的数据交由Shuffle处理，这里是整个MapReduce最神奇厉害的地方了（分片、分区、合并、归并。。。这些功能都在这里实现）,后面会重点讲一下Shuffle</li>
+<li>经过Shuffle初步整合过的数据交给Reduce处理合并产生结果,通过OutputFormat输出（可以输出到hdfs，Sql，文件等）</li>
+</ol>
+<h3 id="理解InputFormat"><a href="#理解InputFormat" class="headerlink" title="理解InputFormat"></a>理解InputFormat</h3><ul>
+<li>InputFormat主要完成两个功能 ： 数据分割(Data Split) 和 记录读取器(Record Reader)</li>
+<li>Data Split : 对输入文件进行切分，切成多少块则需要对应的map去处理，因此blockSize的大小设置不宜过小，否则会造成过多的map运行，占用资源。如果输入文件小文件非常多，会调用CombineFileInputFormat，合并多个小文件生成一个分片，减少map的数量（如果文件为压缩文件，则不可切分也不可合并，因此，如果想要确定控制map的数量，可以通过传入压缩包的数量来控制）</li>
+<li>Record Reader: 对每个切片，读取数据的时候调用map函数，每读一条数据调用一次，直至该切片数据处理完成</li>
+</ul>
+<h3 id="理解Shuffle"><a href="#理解Shuffle" class="headerlink" title="理解Shuffle"></a>理解Shuffle</h3><ul>
+<li>shuffle的本意是洗牌、混洗的意思，把一组有规则的数据尽量打乱成无规则的数据。而在MapReduce中，shuffle更像是洗牌的逆过程，指的是将map端的无规则输出按指定的规则“打乱”成具有一定规则的数据，以便reduce端接收处理。</li>
+<li>Shuffle过程如下：<ul>
+<li>Partitioner : 用于决定数据由哪个Reduce处理。例如 在map阶段完成处理后生成&lt;k,v&gt;格式数据，如果存在一个&lt;a,1&gt; 的数据，Partitioner通过hash方式，有n个reducer的情况下,对键值 ‘a’ 取hash值然后取模 hash % n = m ,得到分到下标为 m 的reducer。然后生成&lt;m,a,1&gt;格式数据。当然，这里分桶(分reducer)的方式不只hash，这里只是最简单的一种例子，可以自行网上查询其他方式</li>
+<li>MemoryBuffer: 内容缓冲区，每个map的结果和Partitioner处理的key,value都保存在这个缓存区域中，默认大小为100M,阀值为 100 * 0。8 = 80M 。缓冲区中的数据以 {“partitioner”,”key”,”value”} 三元数组方式存储</li>
+<li>Spill: 当在内容缓冲区中的数据达到阀值时，溢写Spill线程锁住这80M数据，将这80M数据写入本地磁盘中，释放内存。</li>
+<li>Sort:  每次溢写Spill都会生成一个数据文件，写入磁盘前会对数据进行key排序 Sort，便于后面对合并combiner</li>
+<li>Combiner: 通过Sort后的数据，可以轻易合并key相同的数据，因为key相同，通过Partitioner后确定的reducer也相同，所以这部分数据可以合并，减少reducer的工作量。合并的方式有</li>
+</ul>
+</li>
+<li>Combiner和Partitioner是用来优化Shuffle过程的。这两个都可以自定义实现，因此这里也是MapReduce可以进行性能优化的一个地方</li>
+</ul>
+</li>
+</ul>
+<h3 id="下一章内容"><a href="#下一章内容" class="headerlink" title="下一章内容"></a>下一章内容</h3><ul>
+<li>下一节讲在虚机Hadoop环境上分别使用python和java实现简单的word count(类似于学习Java时的hello world) 的一个MapReduce</li>
+</ul>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>链接:</span>
+                        <span><a href="https://mrljun.github.io/2020/03/09/mapreduce-1/">https://mrljun.github.io/2020/03/09/mapreduce-1/</a></span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>目标:</span>
+                         <span><strong>坚持学习，加Q 228288621 交流学习，技术有限，不吝赐教</strong></span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/%E5%A4%A7%E6%95%B0%E6%8D%AE/"># 大数据</a>
+                    
+                        <a href="/tags/MapReduce/"># MapReduce</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+            
+            <a class="next" rel="next" href="/2020/03/08/hadoop-1/">mac+vm配置hadoop2.x运行环境</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+        </div>
+        <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© liu | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+    <span id="busuanzi_container_site_pv" class="theme-info">
+    &nbsp;&nbsp;|&nbsp;&nbsp;本站总访问量<span id="busuanzi_value_site_pv"></span>次
+      </span>
+      <span id="busuanzi_container_site_uv" class="theme-info">
+    &nbsp;&nbsp;|&nbsp;&nbsp;本站访客数<span id="busuanzi_value_site_uv"></span>人次
+      </span>
+
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+</footer>
+
+    </div>
+</body>
+</html>
